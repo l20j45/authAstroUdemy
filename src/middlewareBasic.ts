@@ -8,7 +8,7 @@ const publicRoutes = ['/'];
 export const onRequest = defineMiddleware(async (context, next) => {
 
     const pathName = context.url.pathname;
-    const authHeaders = '';
+    const authHeaders = context.request.headers.get('Authorization') ?? '';
 
 
 
@@ -31,11 +31,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
 const checkLocalAuth = (authHeaders: string, next: MiddlewareNext) => {
 
     if (authHeaders) {
-        
+        const authValue = authHeaders.split(' ')[1] ?? 'user:pass';
+        const decodedValue = atob(authValue);
+        const [username, password] = decodedValue.split(':');
+        if (username === 'admin' && password === 'admin') {
+            return next();
+        }
+        else {
+            console.log("no permitido")
+        }
     }
     return new Response('Auth Required', {
         status: 401,
-
+        headers: {
+            'WWW-Authenticate': 'Basic realm="Secure Area"',
+        }
     });
 
 };
